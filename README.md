@@ -1,0 +1,108 @@
+![Demo GIF](https://dummyimage.com/1200x640/0a0a0f/f4f2ec.gif&text=AI+Debate+Arena+Live+Demo)
+
+# AI Debate Arena
+
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![LangGraph](https://img.shields.io/badge/LangGraph-state_machine-7F77DD)
+![Redis](https://img.shields.io/badge/Redis-session_state-dc382d)
+
+AI Debate Arena is a real-time web platform where two LLM agents debate a topic from opposite sides while a judge agent scores every argument across six dimensions. The UI streams debate turns live, updates radar charts, records audience votes, and declares a winner at the end.
+
+## Quick Start
+
+```bash
+Copy-Item .env.example .env
+docker compose up --build
+start http://localhost:3000
+```
+
+The backend has deterministic local fallbacks, so the demo runs without API keys. Add `ANTHROPIC_API_KEY` and optionally `OPENAI_API_KEY` in `.env` to use live model calls.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  User["Audience browser"] --> Next["Next.js 14 App Router"]
+  Next --> REST["FastAPI REST"]
+  Next --> WS["FastAPI WebSocket"]
+  REST --> Store["Redis debate state"]
+  WS --> Runner["DebateGraphRunner"]
+  Runner --> Pro["PRO Debater"]
+  Runner --> Con["CON Debater"]
+  Runner --> Judge["Judge Agent"]
+  Runner --> Moderator["Moderator Agent"]
+  Judge --> Scoring["Custom scoring engine"]
+  Scoring --> Metrics["NLI, evidence, persuasion, relevance, counter, originality"]
+  Runner --> Store
+  Runner --> WS
+```
+
+## Scoring
+
+Every argument is scored from `0.0` to `1.0` across:
+
+- Logical coherence
+- Evidence quality
+- Persuasiveness
+- Relevance
+- Counterargument strength
+- Originality
+
+The final score uses the requested weights in [backend/scoring/engine.py](backend/scoring/engine.py).
+
+## API
+
+- `POST /api/debate/create`
+- `POST /api/debate/{debate_id}/start`
+- `GET /api/debate/{debate_id}/state`
+- `POST /api/debate/{debate_id}/vote`
+- `GET /api/debate/{debate_id}/scores`
+- `WS /ws/debate/{debate_id}`
+
+## Local Development
+
+Backend:
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Verification:
+
+```bash
+cd frontend
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Backend smoke test:
+
+```bash
+cd backend
+python -c "import asyncio; from graph.debate_graph import run_terminal_demo; asyncio.run(run_terminal_demo('We should subsidize renewable energy', 1))"
+```
+
+## Dataset
+
+The project includes IBM Research's `argument_quality_ranking_30k` CSV splits under `data/ibm_argument_quality_ranking_30k`. The dataset card says it contains 30,497 crowd-sourced arguments for 71 debate topics with quality and stance labels. Source: [Hugging Face](https://huggingface.co/datasets/ibm-research/argument_quality_ranking_30k).
+
+## Notes
+
+- Redis is the primary state store; the backend falls back to in-memory state when Redis is unavailable for quick local demos.
+- WebSocket clients replay current state on reconnect.
+- The judge retries malformed JSON responses up to three times before falling back to the local scoring engine.
