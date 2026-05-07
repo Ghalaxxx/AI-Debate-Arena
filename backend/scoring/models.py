@@ -119,6 +119,9 @@ class DebateState(BaseModel):
     topic: str = Field(min_length=3, max_length=200)
     current_round: int = Field(default=1, ge=1)
     max_rounds: int = Field(default=5, ge=1, le=10)
+    pro_model: str = "claude-sonnet-4-20250514"
+    con_model: str = "claude-sonnet-4-20250514"
+    judge_model: str = "claude-sonnet-4-20250514"
     turn: DebaterSide = "PRO"
     arguments: list[Argument] = Field(default_factory=list)
     scores: list[ArgumentScore] = Field(default_factory=list)

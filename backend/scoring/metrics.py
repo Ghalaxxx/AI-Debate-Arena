@@ -61,7 +61,6 @@ RHETORICAL_MARKERS = re.compile(
 CONTRADICTION_MARKERS = (
     ("always", "never"),
     ("must", "must not"),
-    ("cannot", "can"),
     ("safe", "dangerous"),
     ("legal", "illegal"),
 )
@@ -210,7 +209,11 @@ def detect_internal_contradiction(argument: str) -> bool:
     """Catch obvious contradictory marker pairs inside one argument."""
 
     lowered = argument.lower()
-    return any(first in lowered and second in lowered for first, second in CONTRADICTION_MARKERS)
+    return any(
+        re.search(rf"\b{re.escape(first)}\b", lowered)
+        and re.search(rf"\b{re.escape(second)}\b", lowered)
+        for first, second in CONTRADICTION_MARKERS
+    )
 
 
 def calculate_logical_coherence(argument: str) -> MetricResult:
