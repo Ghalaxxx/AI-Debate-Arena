@@ -19,6 +19,7 @@ yarn-error.log*
 dist/
 build/
 coverage/
+*.tsbuildinfo
 
 *.sqlite3
 *.log
