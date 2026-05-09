@@ -4,6 +4,8 @@ export type WinnerSide = DebaterSide | "TIE";
 
 export type DebateMode = "AI_VS_AI" | "HUMAN_VS_AI" | "HUMAN_VS_HUMAN";
 
+export type DebateLanguage = "en" | "ar";
+
 export type DebateStatus =
   | "WAITING"
   | "PRO_TURN"
@@ -41,6 +43,7 @@ export interface DebateConfig {
   judge_model?: string;
   mode?: DebateMode;
   human_side?: DebaterSide | null;
+  language?: DebateLanguage;
 }
 
 export interface DebateCreateResponse {
@@ -95,6 +98,7 @@ export interface DebateState {
   judge_model: string;
   mode: DebateMode;
   human_side: DebaterSide | null;
+  language: DebateLanguage;
   turn: DebaterSide;
   arguments: Argument[];
   scores: ArgumentScore[];

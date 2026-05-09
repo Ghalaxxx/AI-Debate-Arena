@@ -3,12 +3,13 @@
 import { Flag, Gauge, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import type { Argument, ArgumentScore } from "@/lib/types";
+import type { Argument, ArgumentScore, DebateLanguage } from "@/lib/types";
 
 interface ArgumentCardProps {
   argument: Argument;
   score: ArgumentScore | null;
   isLatest: boolean;
+  language?: DebateLanguage;
 }
 
 function scoreTone(score: number): string {
@@ -21,10 +22,11 @@ function scoreTone(score: number): string {
   return "bg-arena-teal/18 text-arena-teal border-arena-teal/40";
 }
 
-export default function ArgumentCard({ argument, score, isLatest }: ArgumentCardProps) {
+export default function ArgumentCard({ argument, score, isLatest, language = "en" }: ArgumentCardProps) {
   const [visibleText, setVisibleText] = useState(argument.text);
   const isFlagged = argument.flags.length > 0 || (score?.flags.length ?? 0) > 0;
   const sideAccent = argument.debater === "PRO" ? "border-l-arena-purple" : "border-l-arena-coral";
+  const isRtl = language === "ar";
 
   useEffect(() => {
     if (!isLatest || score) {
@@ -76,7 +78,9 @@ export default function ArgumentCard({ argument, score, isLatest }: ArgumentCard
         </div>
       </div>
 
-      <p className="text-sm leading-6 text-arena-text">{visibleText}</p>
+      <p className={`text-sm leading-7 text-arena-text ${isRtl ? "text-right" : "text-left"}`} dir={isRtl ? "rtl" : "ltr"}>
+        {visibleText}
+      </p>
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <span className="font-mono text-[11px] text-arena-muted">

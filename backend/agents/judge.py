@@ -105,12 +105,17 @@ class JudgeAgent:
 
     def _build_prompt(self, argument: Argument, state: DebateState) -> str:
         opponent = _latest_opponent_argument(argument, state)
+        language_note = (
+            "\nThe debate language is Arabic. The argument may be Arabic, but JSON keys MUST remain English exactly as specified."
+            if state.language == "ar"
+            else "\nThe debate language is English."
+        )
         return JUDGE_SYSTEM_PROMPT.format(
             topic=state.topic,
             side=argument.debater,
             argument_text=argument.text,
             opponent_last_argument=opponent.text if opponent else "None.",
-        )
+        ) + language_note
 
     async def _call_llm(self, prompt: str, force_json: bool) -> dict[str, Any]:
         if SETTINGS.openai_api_key and self.model.lower().startswith("gpt"):

@@ -80,12 +80,13 @@ class DebaterAgent:
         con_history: list[Argument],
         latest_opponent_argument: Argument | None,
         round_number: int,
+        language: str = "en",
     ) -> str:
         """Generate one debate turn for the configured side."""
 
-        prompt = self._build_prompt(topic, pro_history, con_history, latest_opponent_argument)
+        prompt = self._build_prompt(topic, pro_history, con_history, latest_opponent_argument, language)
         if self.model == "local-fallback":
-            return self._fallback_argument(topic, latest_opponent_argument, round_number)
+            return self._fallback_argument(topic, latest_opponent_argument, round_number, language)
         if self.model.lower().startswith("gpt") and SETTINGS.openai_api_key:
             try:
                 generated = await self._call_openai(prompt)
@@ -98,7 +99,7 @@ class DebaterAgent:
                 return _truncate_words(generated, SETTINGS.argument_max_words)
             except Exception:
                 pass
-        return self._fallback_argument(topic, latest_opponent_argument, round_number)
+        return self._fallback_argument(topic, latest_opponent_argument, round_number, language)
 
     def _build_prompt(
         self,
@@ -106,19 +107,25 @@ class DebaterAgent:
         pro_history: list[Argument],
         con_history: list[Argument],
         latest_opponent_argument: Argument | None,
+        language: str,
     ) -> str:
         latest_text = latest_opponent_argument.text if latest_opponent_argument else "None yet."
+        language_instruction = (
+            "\nLANGUAGE REQUIREMENT: Respond fully in Arabic with clear, formal debate Arabic."
+            if language == "ar"
+            else "\nLANGUAGE REQUIREMENT: Respond in English."
+        )
         if self.side == "PRO":
             return PRO_SYSTEM_PROMPT.format(
                 topic=topic,
                 pro_history=_format_history(pro_history),
                 latest_con_argument=latest_text,
-            )
+            ) + language_instruction
         return CON_SYSTEM_PROMPT.format(
             topic=topic,
             con_history=_format_history(con_history),
             latest_pro_argument=latest_text,
-        )
+        ) + language_instruction
 
     async def _call_anthropic(self, system_prompt: str) -> str:
         from anthropic import AsyncAnthropic
@@ -156,7 +163,10 @@ class DebaterAgent:
         topic: str,
         latest_opponent_argument: Argument | None,
         round_number: int,
+        language: str = "en",
     ) -> str:
+        if language == "ar":
+            return self._fallback_arabic_argument(topic, latest_opponent_argument, round_number)
         pro_angles = (
             "public benefit",
             "long-term incentives",
@@ -198,6 +208,40 @@ class DebaterAgent:
                 f"According to common policy analysis, the decisive issue is not whether the goal sounds noble, but "
                 f"whether the mechanism survives real-world pressure. If the plan cannot control side effects, it should "
                 f"not be treated as progress. {topic} is a risky answer to a problem that needs sharper tools."
+            )
+        return _truncate_words(text, SETTINGS.argument_max_words)
+
+    def _fallback_arabic_argument(
+        self,
+        topic: str,
+        latest_opponent_argument: Argument | None,
+        round_number: int,
+    ) -> str:
+        pro_angles = ("المصلحة العامة", "تقليل المخاطر", "الثقة المؤسسية", "العدالة", "الكلفة بعيدة المدى")
+        con_angles = ("الآثار الجانبية", "الحرية الفردية", "صعوبة التنفيذ", "ضعف الأدلة", "المبالغة التنظيمية")
+        if self.side == "PRO":
+            angle = pro_angles[(round_number - 1) % len(pro_angles)]
+            counter = (
+                f"يعترض الطرف المعارض بأن '{latest_opponent_argument.text[:100]}...'، لكن هذا الاعتراض يضخم المخاطر ويتجاهل المكاسب العملية."
+                if latest_opponent_argument
+                else "تنطلق حجتي من مقدمة واضحة: السياسات الجيدة يجب أن تمنع الضرر قبل أن يصبح واسع النطاق."
+            )
+            text = (
+                f"{counter} إن تأييد موضوع {topic} يستند إلى {angle}، لأن القرار العام لا يقاس بالشعار بل بقدرته على حماية الناس وبناء الثقة. "
+                "تشير الخبرة التاريخية وتحليل السياسات إلى أن التدخل المبكر عندما يكون منضبطا يقلل الكلفة ويجعل الابتكار أكثر أمانا وعدلا. "
+                "فلماذا ننتظر وقوع الضرر إذا كان التنظيم الذكي قادرا على تحويل التقدم إلى منفعة عامة؟ هذا الموقف ليس حماسا مجردا، بل حكم عملي مسؤول."
+            )
+        else:
+            angle = con_angles[(round_number - 1) % len(con_angles)]
+            counter = (
+                f"يدعي الطرف المؤيد أن '{latest_opponent_argument.text[:100]}...'، لكنه يتجاوز السؤال الأهم: كيف نمنع فشل الآلية نفسها؟"
+                if latest_opponent_argument
+                else "يقع عبء الإثبات على المؤيدين؛ فحسن النية لا يكفي لصنع سياسة ناجحة."
+            )
+            text = (
+                f"{counter} إن رفض موضوع {topic} يقوم على مقدمة بسيطة: كل تدخل واسع قد ينتج {angle} إذا لم يكن قابلا للمراجعة والمساءلة. "
+                "المشكلة ليست في جمال الهدف، بل في قدرة النظام على الصمود أمام الواقع والكلفة والحوافز الخاطئة. "
+                "إذا كانت الخطة لا تضبط آثارها الجانبية، فلا يجوز تقديمها كحل نهائي. المعارضة هنا دفاع عن سياسة أدق وأكثر مسؤولية."
             )
         return _truncate_words(text, SETTINGS.argument_max_words)
 

@@ -4,7 +4,7 @@ import { AlertTriangle, Bot, Loader2, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { getDebateState, startDebate } from "@/lib/api";
-import type { Argument, ArgumentScore, DebaterSide, DimensionScores } from "@/lib/types";
+import type { Argument, ArgumentScore, DebateLanguage, DebaterSide, DimensionScores } from "@/lib/types";
 import { DIMENSION_KEYS, modelLabel } from "@/lib/types";
 
 import { currentVotes, useDebateStore } from "@/hooks/useDebateStore";
@@ -40,7 +40,8 @@ function SidePanel({
   proScores,
   conScores,
   scoresByArgument,
-  model
+  model,
+  language
 }: {
   side: DebaterSide;
   argumentsList: Argument[];
@@ -49,8 +50,10 @@ function SidePanel({
   conScores: DimensionScores;
   scoresByArgument: Record<string, ArgumentScore>;
   model: string;
+  language: DebateLanguage;
 }) {
   const isPro = side === "PRO";
+  const isRtl = language === "ar";
   return (
     <aside className="flex min-h-0 flex-col gap-4">
       <section className="rounded-lg border border-arena-line bg-arena-panel/84 p-4 shadow-glow">
@@ -87,7 +90,9 @@ function SidePanel({
         <div className="space-y-3">
           {argumentsList.map((argument) => (
             <div key={argument.argument_id} className="rounded-lg border border-arena-line bg-arena-black/42 p-3">
-              <p className="line-clamp-4 text-xs leading-5 text-arena-muted">{argument.text}</p>
+              <p className={`line-clamp-4 text-xs leading-5 text-arena-muted ${isRtl ? "text-right" : "text-left"}`}>
+                {argument.text}
+              </p>
               <div className="mt-2 font-mono text-[11px] text-arena-muted">
                 score {((scoresByArgument[argument.argument_id]?.final_score ?? 0) * 100).toFixed(0)}
               </div>
@@ -171,7 +176,10 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
   }
 
   return (
-    <main className="premium-grid flex min-h-screen flex-col text-arena-text">
+    <main
+      className="premium-grid flex min-h-screen flex-col text-arena-text"
+      dir={debate.language === "ar" ? "rtl" : "ltr"}
+    >
       <div className="grid min-h-0 flex-1 gap-4 p-4 pb-0 lg:grid-cols-[minmax(260px,30%)_minmax(360px,40%)_minmax(260px,30%)]">
         <SidePanel
           side="PRO"
@@ -181,6 +189,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           conScores={conScores}
           scoresByArgument={scoresByArgument}
           model={debate.pro_model}
+          language={debate.language}
         />
 
         <section className="relative flex min-h-0 flex-col gap-4">
@@ -190,7 +199,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
                 <h1 className="font-display text-2xl font-bold text-arena-text">{debate.topic}</h1>
                 <p className="mt-2 font-mono text-xs text-arena-muted">
                   PRO {modelLabel(debate.pro_model)} vs CON {modelLabel(debate.con_model)} / Judge{" "}
-                  {modelLabel(debate.judge_model)}
+                  {modelLabel(debate.judge_model)} / {debate.language === "ar" ? "Arabic" : "English"}
                 </p>
               </div>
               {debate.winner ? (
@@ -214,6 +223,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
                       argument={argument}
                       score={scoresByArgument[argument.argument_id] ?? null}
                       isLatest={argument.argument_id === latestArgumentId}
+                      language={debate.language}
                     />
                   </div>
                 </div>
@@ -237,7 +247,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
 
           <ArgumentTree argumentsList={argumentsList} scoresByArgument={scoresByArgument} />
 
-          {isHumanTurn ? <HumanArgumentComposer debateId={debateId} /> : null}
+          {isHumanTurn ? <HumanArgumentComposer debateId={debateId} language={debate.language} /> : null}
 
           {error ? (
             <div className="flex items-center gap-2 rounded-lg border border-arena-red/40 bg-arena-red/12 p-3 text-sm text-arena-red">
@@ -255,6 +265,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           conScores={conScores}
           scoresByArgument={scoresByArgument}
           model={debate.con_model}
+          language={debate.language}
         />
       </div>
 

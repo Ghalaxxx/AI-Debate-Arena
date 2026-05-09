@@ -80,6 +80,15 @@ The setup screen now supports:
 
 Human arguments are submitted through `POST /api/debate/{debate_id}/argument`, judged with the same scoring engine, and streamed to connected WebSocket clients before the AI response is generated.
 
+## Arabic Debates
+
+The setup screen supports English and Arabic. When Arabic is selected:
+
+- Debater prompts require fully Arabic arguments.
+- Judge and moderator prompts understand Arabic arguments while preserving English JSON keys.
+- Local fallback debaters produce Arabic arguments without API keys.
+- The debate arena switches to RTL layout and Arabic argument cards use right-aligned, readable text.
+
 ## API
 
 - `POST /api/debate/create`

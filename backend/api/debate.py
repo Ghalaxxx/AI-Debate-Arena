@@ -103,6 +103,7 @@ async def create_debate(payload: DebateCreateRequest, request: Request) -> Debat
         judge_model=payload.judge_model,
         mode=payload.mode,
         human_side=payload.human_side,
+        language=payload.language,
         status="WAITING",
     )
     await debate_store.save(state)

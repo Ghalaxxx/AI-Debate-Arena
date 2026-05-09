@@ -70,12 +70,17 @@ class ModeratorAgent:
     async def moderate(self, state: DebateState, latest_argument: Argument) -> ModerationDecision:
         """Validate the latest argument and decide whether debate continues."""
 
+        language_note = (
+            "\nThe debate language is Arabic. Read Arabic arguments normally, but return JSON keys in English."
+            if state.language == "ar"
+            else "\nThe debate language is English."
+        )
         prompt = MODERATOR_SYSTEM_PROMPT.format(
             topic=state.topic,
             current_round=state.current_round,
             max_rounds=state.max_rounds,
             latest_argument=latest_argument.text,
-        )
+        ) + language_note
         if self.model != "local-fallback" and SETTINGS.anthropic_api_key:
             try:
                 return self._decision_from_payload(await self._call_anthropic(prompt))

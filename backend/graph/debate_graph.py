@@ -154,6 +154,7 @@ class DebateGraphRunner:
                 con_history=[argument for argument in self.state.arguments if argument.debater == "CON"],
                 latest_opponent_argument=self._latest_opponent_argument(side),
                 round_number=self.state.current_round,
+                language=self.state.language,
             ),
             timeout=AGENT_CALL_TIMEOUT_SECONDS,
         )

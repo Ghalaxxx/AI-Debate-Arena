@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 DebaterSide = Literal["PRO", "CON"]
 WinnerSide = Literal["PRO", "CON", "TIE"]
 DebateMode = Literal["AI_VS_AI", "HUMAN_VS_AI", "HUMAN_VS_HUMAN"]
+DebateLanguage = Literal["en", "ar"]
 DebateStatus = Literal[
     "WAITING",
     "PRO_TURN",
@@ -106,6 +107,7 @@ class DebateConfig(BaseModel):
     judge_model: str = "claude-sonnet-4-20250514"
     mode: DebateMode = "AI_VS_AI"
     human_side: DebaterSide | None = None
+    language: DebateLanguage = "en"
 
     @field_validator("topic")
     @classmethod
@@ -135,6 +137,7 @@ class DebateState(BaseModel):
     judge_model: str = "claude-sonnet-4-20250514"
     mode: DebateMode = "AI_VS_AI"
     human_side: DebaterSide | None = None
+    language: DebateLanguage = "en"
     turn: DebaterSide = "PRO"
     arguments: list[Argument] = Field(default_factory=list)
     scores: list[ArgumentScore] = Field(default_factory=list)
