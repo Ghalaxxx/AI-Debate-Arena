@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { getDebateState, startDebate } from "@/lib/api";
 import type { Argument, ArgumentScore, DebaterSide, DimensionScores } from "@/lib/types";
-import { DIMENSION_KEYS } from "@/lib/types";
+import { DIMENSION_KEYS, modelLabel } from "@/lib/types";
 
 import { currentVotes, useDebateStore } from "@/hooks/useDebateStore";
 import { useDebateSocket } from "@/hooks/useDebateSocket";
@@ -38,7 +38,8 @@ function SidePanel({
   total,
   proScores,
   conScores,
-  scoresByArgument
+  scoresByArgument,
+  model
 }: {
   side: DebaterSide;
   argumentsList: Argument[];
@@ -46,6 +47,7 @@ function SidePanel({
   proScores: DimensionScores;
   conScores: DimensionScores;
   scoresByArgument: Record<string, ArgumentScore>;
+  model: string;
 }) {
   const isPro = side === "PRO";
   return (
@@ -61,7 +63,9 @@ function SidePanel({
           </div>
           <div>
             <h2 className="text-base font-semibold text-arena-text">{isPro ? "PRO Debater" : "CON Debater"}</h2>
-            <p className="font-mono text-xs text-arena-muted">{isPro ? "Affirmative agent" : "Opposition agent"}</p>
+            <p className={isPro ? "font-mono text-xs text-arena-purple" : "font-mono text-xs text-arena-coral"}>
+              {modelLabel(model)}
+            </p>
           </div>
           <div className="ml-auto text-right">
             <p className="font-mono text-2xl font-bold text-arena-text">{(total * 100).toFixed(0)}</p>
@@ -169,6 +173,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           proScores={proScores}
           conScores={conScores}
           scoresByArgument={scoresByArgument}
+          model={debate.pro_model}
         />
 
         <section className="relative flex min-h-0 flex-col gap-4">
@@ -177,7 +182,8 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
               <div>
                 <h1 className="font-display text-2xl font-bold text-arena-text">{debate.topic}</h1>
                 <p className="mt-2 font-mono text-xs text-arena-muted">
-                  {debate.pro_model} vs {debate.con_model}
+                  PRO {modelLabel(debate.pro_model)} vs CON {modelLabel(debate.con_model)} / Judge{" "}
+                  {modelLabel(debate.judge_model)}
                 </p>
               </div>
               {debate.winner ? (
@@ -239,6 +245,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           proScores={proScores}
           conScores={conScores}
           scoresByArgument={scoresByArgument}
+          model={debate.con_model}
         />
       </div>
 

@@ -76,7 +76,7 @@ class ModeratorAgent:
             max_rounds=state.max_rounds,
             latest_argument=latest_argument.text,
         )
-        if SETTINGS.anthropic_api_key:
+        if self.model != "local-fallback" and SETTINGS.anthropic_api_key:
             try:
                 return self._decision_from_payload(await self._call_anthropic(prompt))
             except Exception:

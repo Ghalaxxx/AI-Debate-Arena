@@ -84,6 +84,14 @@ class DebaterAgent:
         """Generate one debate turn for the configured side."""
 
         prompt = self._build_prompt(topic, pro_history, con_history, latest_opponent_argument)
+        if self.model == "local-fallback":
+            return self._fallback_argument(topic, latest_opponent_argument, round_number)
+        if self.model.lower().startswith("gpt") and SETTINGS.openai_api_key:
+            try:
+                generated = await self._call_openai(prompt)
+                return _truncate_words(generated, SETTINGS.argument_max_words)
+            except Exception:
+                pass
         if SETTINGS.anthropic_api_key:
             try:
                 generated = await self._call_anthropic(prompt)
@@ -127,6 +135,21 @@ class DebaterAgent:
             block.text for block in response.content if getattr(block, "type", "") == "text" and block.text
         ]
         return " ".join(text_parts).strip()
+
+    async def _call_openai(self, system_prompt: str) -> str:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=SETTINGS.openai_api_key)
+        response = await client.chat.completions.create(
+            model=self.model,
+            max_tokens=500,
+            temperature=0.75,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "Generate the next debate argument now."},
+            ],
+        )
+        return (response.choices[0].message.content or "").strip()
 
     def _fallback_argument(
         self,

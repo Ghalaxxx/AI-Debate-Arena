@@ -94,7 +94,7 @@ class JudgeAgent:
         """Return a strict ArgumentScore for the latest argument."""
 
         prompt = self._build_prompt(argument, state)
-        if SETTINGS.anthropic_api_key or SETTINGS.openai_api_key:
+        if self.model != "local-fallback" and (SETTINGS.anthropic_api_key or SETTINGS.openai_api_key):
             for attempt in range(3):
                 try:
                     raw_response = await self._call_llm(prompt, force_json=attempt > 0)

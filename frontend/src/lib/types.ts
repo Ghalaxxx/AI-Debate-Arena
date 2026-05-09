@@ -24,6 +24,13 @@ export type DimensionScores = Record<DimensionKey, number>;
 
 export type AudienceVotes = Record<DebaterSide, number>;
 
+export interface ModelOption {
+  id: string;
+  label: string;
+  provider: "Anthropic" | "OpenAI" | "Local";
+  bestFor: string;
+}
+
 export interface DebateConfig {
   topic: string;
   max_rounds: number;
@@ -143,3 +150,34 @@ export const DIMENSION_LABELS: Record<DimensionKey, string> = {
 };
 
 export const DIMENSION_KEYS = Object.keys(DIMENSION_LABELS) as DimensionKey[];
+
+export const MODEL_OPTIONS: ModelOption[] = [
+  {
+    id: "claude-sonnet-4-20250514",
+    label: "Claude Sonnet 4",
+    provider: "Anthropic",
+    bestFor: "Nuanced long-form reasoning"
+  },
+  {
+    id: "gpt-4o",
+    label: "GPT-4o",
+    provider: "OpenAI",
+    bestFor: "Fast counterarguments"
+  },
+  {
+    id: "gpt-4o-mini",
+    label: "GPT-4o Mini",
+    provider: "OpenAI",
+    bestFor: "Low-latency judging"
+  },
+  {
+    id: "local-fallback",
+    label: "Local Fallback",
+    provider: "Local",
+    bestFor: "Credential-free demos"
+  }
+];
+
+export function modelLabel(modelId: string): string {
+  return MODEL_OPTIONS.find((model) => model.id === modelId)?.label ?? modelId;
+}

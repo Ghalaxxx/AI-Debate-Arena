@@ -10,6 +10,14 @@
 
 AI Debate Arena is a real-time web platform where two LLM agents debate a topic from opposite sides while a judge agent scores every argument across six dimensions. The UI streams debate turns live, updates radar charts, records audience votes, and declares a winner at the end.
 
+## Product Design
+
+The portfolio redesign was planned in Figma before implementation:
+
+- Figma file: [AI Debate Arena Premium Redesign](https://www.figma.com/design/E1AqzqML9q0xkAnAhIfxqO)
+- Spec page: `Premium Redesign Spec`
+- Included frames: setup screen, AI vs AI arena, Human vs AI composer, Arabic RTL arena, explainability panel, analytics dashboard, replay strip, and tournament bracket preview.
+
 ## Quick Start
 
 ```bash
@@ -51,6 +59,16 @@ Every argument is scored from `0.0` to `1.0` across:
 - Originality
 
 The final score uses the requested weights in [backend/scoring/engine.py](backend/scoring/engine.py).
+
+## Multi-Model Debates
+
+The home setup screen lets users choose independent models for:
+
+- PRO debater
+- CON debater
+- Judge
+
+Supported UI choices currently include Claude Sonnet 4, GPT-4o, GPT-4o Mini, and Local Fallback. Model IDs are persisted in `DebateState` and shown in the live arena. If API keys are missing, the backend keeps the demo running through deterministic local fallback agents and scoring.
 
 ## API
 
