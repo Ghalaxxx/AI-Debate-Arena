@@ -1,5 +1,3 @@
-![Demo GIF](https://dummyimage.com/1200x640/0a0a0f/f4f2ec.gif&text=AI+Debate+Arena+Live+Demo)
-
 # AI Debate Arena
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
@@ -7,158 +5,346 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![LangGraph](https://img.shields.io/badge/LangGraph-state_machine-7F77DD)
 ![Redis](https://img.shields.io/badge/Redis-session_state-dc382d)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8)
 
-AI Debate Arena is a real-time web platform where two LLM agents debate a topic from opposite sides while a judge agent scores every argument across six dimensions. The UI streams debate turns live, updates radar charts, records audience votes, and declares a winner at the end.
+AI Debate Arena is a real-time AI debate platform where two debaters argue opposite sides of a topic while a judge agent scores argument quality live. The app supports AI vs AI, Human vs AI, Arabic debates with RTL layout, explainable judging, replay, analytics, and an early tournament bracket system.
 
-## Product Design
+The project is designed as a portfolio-grade full-stack AI systems product: typed backend models, strict TypeScript frontend, WebSocket updates, Redis-backed state, deterministic local fallback mode, and Docker-based startup.
 
-The portfolio redesign was planned in Figma before implementation:
+## Demo
 
-- Figma file: [AI Debate Arena Premium Redesign](https://www.figma.com/design/E1AqzqML9q0xkAnAhIfxqO)
-- Spec page: `Premium Redesign Spec`
-- Included frames: setup screen, AI vs AI arena, Human vs AI composer, Arabic RTL arena, explainability panel, analytics dashboard, replay strip, and tournament bracket preview.
+Demo video: YouTube walkthrough coming soon.
 
-## Quick Start
+Recommended video flow:
 
-```bash
-Copy-Item .env.example .env
-docker compose up --build
-start http://localhost:3000
-```
+1. Create an AI vs AI debate with different PRO, CON, and Judge models.
+2. Show live arguments, judging state, radar updates, and audience voting.
+3. Open the explainability panel for one scored argument.
+4. Run a Human vs AI debate and submit a manual argument.
+5. Switch to Arabic and show RTL argument rendering.
+6. Open replay mode and tournament mode.
 
-The backend has deterministic local fallbacks, so the demo runs without API keys. Add `ANTHROPIC_API_KEY` and optionally `OPENAI_API_KEY` in `.env` to use live model calls.
+## Screenshots
+
+### Debate Setup
+
+![AI Debate Arena setup screen](docs/screenshots/home.png)
+
+### Live Debate Arena
+
+![AI Debate Arena live debate screen](docs/screenshots/arena.png)
+
+### Replay Mode
+
+![AI Debate Arena replay screen](docs/screenshots/replay.png)
+
+### Tournament Bracket
+
+![AI Debate Arena tournament bracket screen](docs/screenshots/tournament.png)
+
+## Features
+
+- Real-time AI debates over WebSockets.
+- Independent model selection for PRO, CON, and Judge.
+- AI vs AI and Human vs AI modes.
+- Human vs Human placeholder for future multiplayer support.
+- English and Arabic debate support.
+- RTL UI rendering for Arabic debates.
+- Judge explainability panel for every scored argument.
+- Six-dimension scoring engine with weighted final score.
+- Conservative toxicity and unsafe rhetoric flagging.
+- Audience voting with live totals.
+- Debate replay with step-by-step playback and speed controls.
+- End-of-debate analytics dashboard.
+- Tournament bracket data model and bracket visualization.
+- Redis state persistence with in-memory fallback for local demos.
+- Docker Compose startup for backend, frontend, and Redis.
+- Local fallback agents and scoring when API keys are unavailable.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  User["Audience browser"] --> Next["Next.js 14 App Router"]
-  Next --> REST["FastAPI REST"]
-  Next --> WS["FastAPI WebSocket"]
-  REST --> Store["Redis debate state"]
+  Browser["Next.js client"] --> REST["FastAPI REST API"]
+  Browser --> WS["FastAPI WebSocket"]
+  REST --> Store["Redis or in-memory store"]
   WS --> Runner["DebateGraphRunner"]
   Runner --> Pro["PRO Debater"]
   Runner --> Con["CON Debater"]
   Runner --> Judge["Judge Agent"]
   Runner --> Moderator["Moderator Agent"]
-  Judge --> Scoring["Custom scoring engine"]
-  Scoring --> Metrics["NLI, evidence, persuasion, relevance, counter, originality"]
+  Judge --> Engine["Scoring Engine"]
+  Engine --> Metrics["Metric calculators"]
   Runner --> Store
   Runner --> WS
 ```
 
-## Scoring
+The backend owns debate orchestration and scoring. The frontend renders setup, live debate state, replay, analytics, and tournament views. Redis stores active debate and tournament state; if Redis is unavailable, the backend falls back to process-local memory so demos still work.
 
-Every argument is scored from `0.0` to `1.0` across:
+## Tech Stack
 
-- Logical coherence
-- Evidence quality
-- Persuasiveness
-- Relevance
-- Counterargument strength
-- Originality
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 14 App Router, React, TypeScript strict mode |
+| Styling | Tailwind CSS |
+| State | Zustand |
+| Charts | Recharts |
+| API Client | Axios |
+| Backend | FastAPI, Pydantic v2, Python type hints |
+| Agent Flow | LangGraph-compatible debate runner |
+| Realtime | Native FastAPI WebSockets |
+| State Store | Redis with in-memory fallback |
+| LLM Providers | Anthropic Claude Sonnet 4 primary, OpenAI GPT-4o optional judge |
+| Analysis | spaCy, sentence-transformers, custom scoring logic |
+| Infrastructure | Docker, Docker Compose |
 
-The final score uses the requested weights in [backend/scoring/engine.py](backend/scoring/engine.py).
+## Product Design
 
-## Multi-Model Debates
+The redesign was planned in Figma before implementation:
 
-The home setup screen lets users choose independent models for:
+- Figma file: [AI Debate Arena Premium Redesign](https://www.figma.com/design/E1AqzqML9q0xkAnAhIfxqO)
+- Scope: setup screen, AI vs AI arena, Human vs AI composer, Arabic RTL arena, explainability panel, analytics dashboard, replay flow, and tournament bracket preview.
+- Direction: dark futuristic debate arena, strong hierarchy, dashboard-grade density, minimal visual noise, and recruiter-ready polish.
 
-- PRO debater
-- CON debater
-- Judge
+## Repository Structure
 
-Supported UI choices currently include Claude Sonnet 4, GPT-4o, GPT-4o Mini, and Local Fallback. Model IDs are persisted in `DebateState` and shown in the live arena. If API keys are missing, the backend keeps the demo running through deterministic local fallback agents and scoring.
+```text
+ai-debate-arena/
+|-- backend/
+|   |-- main.py
+|   |-- agents/
+|   |-- api/
+|   |-- graph/
+|   |-- safety/
+|   |-- scoring/
+|   |-- tournament/
+|   |-- config.py
+|   `-- requirements.txt
+|-- data/
+|   `-- ibm_argument_quality_ranking_30k/
+|-- docs/
+|   `-- screenshots/
+|-- frontend/
+|   |-- src/
+|   |   |-- app/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- lib/
+|   |   `-- styles/
+|   |-- package.json
+|   `-- tsconfig.json
+|-- docker-compose.yml
+|-- .env.example
+`-- README.md
+```
 
-## Debate Modes
+## Backend Overview
 
-The setup screen now supports:
+- `backend/main.py` creates the FastAPI app, configures CORS, registers REST and WebSocket routers, and exposes `/health`.
+- `backend/config.py` centralizes environment variables, model defaults, Redis URL, timeout settings, CORS origins, and fallback behavior.
+- `backend/agents/debater.py` contains PRO and CON debater classes, prompt templates, word-limit handling, API-backed generation, and local fallback generation.
+- `backend/agents/judge.py` contains the judge agent, structured JSON judge prompt, retry handling for malformed JSON, and fallback scoring integration.
+- `backend/agents/moderator.py` checks turn flow, topic adherence, continuation rules, and final summary generation.
+- `backend/scoring/models.py` defines typed Pydantic models such as `Argument`, `ArgumentScore`, `DebateState`, and `DebateConfig`.
+- `backend/scoring/metrics.py` implements the six metric calculators: coherence, evidence, persuasiveness, relevance, counterargument strength, and originality.
+- `backend/scoring/engine.py` aggregates metric scores with the configured weights and attaches reasoning, strongest point, weakest point, explanations, and flags.
+- `backend/safety/toxicity.py` performs conservative toxicity checks for insults, hate speech, personal attacks, aggressive language, and off-topic attacks.
+- `backend/graph/debate_graph.py` runs debate state transitions and orchestrates debaters, judge, moderator, and WebSocket broadcasts.
+- `backend/api/debate.py` exposes debate creation, start, state, vote, score, and human argument endpoints.
+- `backend/api/ws.py` manages WebSocket connections and pushes state, argument, score, end, and error events.
+- `backend/api/tournament.py` exposes tournament creation and retrieval endpoints.
+- `backend/tournament/models.py` and `backend/tournament/engine.py` define tournament bracket state and bracket creation logic.
 
-- `AI_VS_AI`: both sides are generated automatically.
-- `HUMAN_VS_AI`: the human argues PRO, submits manual arguments in the arena, and the AI responds as CON.
-- `HUMAN_VS_HUMAN`: visible as a disabled placeholder for a later multiplayer phase.
+## Frontend Overview
 
-Human arguments are submitted through `POST /api/debate/{debate_id}/argument`, judged with the same scoring engine, and streamed to connected WebSocket clients before the AI response is generated.
+- `frontend/src/app/page.tsx` renders the home setup screen with topic input, model selectors, mode selection, language selection, and recent debates.
+- `frontend/src/app/debate/[id]/page.tsx` renders the live debate route.
+- `frontend/src/app/replay/[id]/page.tsx` renders debate replay mode.
+- `frontend/src/app/tournament/page.tsx` renders tournament setup and bracket visualization.
+- `frontend/src/components/DebateArena.tsx` is the main live arena container for side panels, argument feed, status, voting, analytics, and explainability.
+- `frontend/src/components/ArgumentCard.tsx` renders argument bubbles, scoring badges, warning flags, and streaming-style visual states.
+- `frontend/src/components/ScoreRadar.tsx` renders the six-axis Recharts radar chart.
+- `frontend/src/components/VotePanel.tsx` handles audience votes.
+- `frontend/src/components/StatusBar.tsx` shows debate state, rounds, and score comparison.
+- `frontend/src/components/JudgeExplainabilityPanel.tsx` explains why each argument earned or lost points.
+- `frontend/src/components/DebateAnalytics.tsx` renders post-debate score trends and best/weakest argument insights.
+- `frontend/src/components/DebateReplay.tsx` reconstructs saved debate history into replay events.
+- `frontend/src/components/TournamentBracket.tsx` renders the bracket visualization.
+- `frontend/src/hooks/useDebateSocket.ts` manages native WebSocket connection and reconnect behavior.
+- `frontend/src/hooks/useDebateStore.ts` stores live debate state with Zustand.
+- `frontend/src/lib/api.ts` contains the typed Axios REST client and WebSocket URL helper.
+- `frontend/src/lib/types.ts` contains shared TypeScript interfaces and constants.
+- `frontend/src/styles/globals.css` defines the dark arena theme, Tailwind layers, scrollbars, and animation utilities.
 
-## Arabic Debates
+## Agent System
 
-The setup screen supports English and Arabic. When Arabic is selected:
+The debate uses four agent roles:
 
-- Debater prompts require fully Arabic arguments.
-- Judge and moderator prompts understand Arabic arguments while preserving English JSON keys.
-- Local fallback debaters produce Arabic arguments without API keys.
-- The debate arena switches to RTL layout and Arabic argument cards use right-aligned, readable text.
+- PRO Debater argues in favor of the topic, references previous PRO arguments, and counters the latest CON argument.
+- CON Debater argues against the topic, references previous CON arguments, and counters the latest PRO argument.
+- Judge scores every submitted argument across six dimensions and returns structured JSON.
+- Moderator enforces turn order, checks topic adherence, decides continuation, and generates final summaries.
 
-## Judge Explainability
+When API keys are configured, the backend can call Anthropic and OpenAI models. Without API keys, local fallback agents generate deterministic debate content so the product can be demoed immediately.
 
-Each scored argument exposes a judge explainability drawer from its score badge. The drawer shows:
+## Scoring Engine
 
-- Final weighted score
-- Six dimension scores
-- Judge reasoning
-- Strongest point
-- Weakest point
-- Why points were gained or lost
-- Detected flags
+Every argument receives dimension scores from `0.0` to `1.0`:
 
-## Debate Analytics
+| Dimension | Implementation |
+| --- | --- |
+| Logical coherence | Premise-to-claim support approximation with circularity and contradiction penalties |
+| Evidence quality | Regex-based detection of citations, statistics, expert references, anecdotes, years, and sources |
+| Persuasiveness | Structured scoring path with local fallback |
+| Relevance | Semantic similarity between topic and argument |
+| Counterargument strength | Similarity against the previous opponent argument |
+| Originality | Similarity against the same debater's prior arguments |
 
-After a debate ends, the arena shows a compact analytics dashboard with:
+Final score weights:
 
-- Score trend per round
-- PRO vs CON average score
-- Evidence quality trend
-- Originality trend
-- Best argument
-- Weakest argument
-- Most persuasive round
+```python
+WEIGHTS = {
+    "logical_coherence": 0.25,
+    "evidence_quality": 0.20,
+    "persuasiveness": 0.20,
+    "relevance": 0.15,
+    "counterargument": 0.15,
+    "originality": 0.05,
+}
+```
 
-## Toxicity Detection
+The output is an `ArgumentScore` with dimension scores, final score, judge reasoning, explainability fields, timestamp, and flags.
 
-The scoring engine includes conservative safety checks that flag, but do not block, clearly unsafe rhetoric:
+## REST API
 
-- Insults
-- Hate speech
-- Personal attacks
-- Aggressive language
-- Off-topic identity attacks
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/debate/create` | Create a debate with topic, rounds, models, mode, and language |
+| `POST` | `/api/debate/{debate_id}/start` | Start an AI vs AI debate |
+| `GET` | `/api/debate/{debate_id}/state` | Retrieve full debate state |
+| `POST` | `/api/debate/{debate_id}/argument` | Submit a human argument in Human vs AI mode |
+| `POST` | `/api/debate/{debate_id}/vote` | Vote for PRO or CON |
+| `GET` | `/api/debate/{debate_id}/scores` | Retrieve aggregate scoring data |
+| `POST` | `/api/tournament/create` | Create a 4-topic or 8-topic bracket |
+| `GET` | `/api/tournament/{tournament_id}` | Retrieve tournament state |
 
-Flags are stored on `ArgumentScore` and displayed as warning badges on argument cards and in the judge explainability drawer.
+## WebSocket Flow
 
-## Debate Replay
+Clients connect to:
 
-Ended debates link to `/replay/{debate_id}`. Replay mode reconstructs the debate from saved state and plays events step by step:
+```text
+ws://localhost:8000/ws/debate/{debate_id}
+```
 
-- Turn state
-- Argument reveal
-- Judging state
-- Score reveal
-- End result
+Server message types:
+
+- `STATE_CHANGE`: debate state, current turn, and round changed.
+- `ARGUMENT`: a new PRO, CON, or human argument was submitted.
+- `SCORE_UPDATE`: judge score is ready for an argument.
+- `DEBATE_ENDED`: winner, final scores, summary, and audience votes.
+- `ERROR`: recoverable server-side issue.
+
+On reconnect, the frontend fetches full state through REST and continues from the latest saved debate state.
+
+## Human vs AI Mode
+
+In Human vs AI mode, the human argues as PRO and the AI responds as CON. The arena only shows the manual input composer when it is the human's turn. Submitted human arguments are scored by the same judge and scoring engine as AI arguments, then streamed to connected clients before the AI response is generated.
+
+## Arabic Debate Support
+
+Arabic mode changes both backend behavior and frontend rendering:
+
+- Debater prompts request Arabic arguments.
+- Judge and moderator prompts evaluate Arabic text while keeping JSON keys in English.
+- Local fallback mode can generate Arabic arguments.
+- The debate arena switches to `dir="rtl"`.
+- Argument cards use right-aligned Arabic-friendly layout and readable spacing.
+
+## Explainability System
+
+Each scored argument includes a learning-focused explainability view:
+
+- final weighted score
+- six dimension scores
+- judge reasoning
+- detected flags
+- strongest point
+- weakest point
+- why the argument gained or lost points
+
+This makes the product useful for understanding argument quality rather than only watching a score.
+
+## Replay System
+
+Replay mode is available at:
+
+```text
+/replay/{debate_id}
+```
+
+It rebuilds debate history from saved state and plays it as a sequence:
+
+1. turn state
+2. argument appears
+3. judging state appears
+4. score appears
+5. next turn continues
 
 Speed controls support `1x`, `1.5x`, and `2x`.
 
-## Tournament Brackets
+## Tournament Mode
 
-Tournament mode is available at `/tournament`. The first version includes:
+Tournament mode is available at:
 
-- 4-topic or 8-topic bracket creation
-- Typed backend tournament models
-- `POST /api/tournament/create`
-- `GET /api/tournament/{tournament_id}`
-- Clean bracket visualization with pending semifinal/final slots
+```text
+/tournament
+```
 
-Automated match execution and winner advancement are intentionally left as the next bracket upgrade.
+The current implementation includes:
 
-## API
+- 4-topic and 8-topic bracket creation.
+- Typed tournament models.
+- Backend tournament endpoints.
+- Frontend bracket visualization with pending advancement slots.
 
-- `POST /api/debate/create`
-- `POST /api/debate/{debate_id}/start`
-- `GET /api/debate/{debate_id}/state`
-- `POST /api/debate/{debate_id}/vote`
-- `GET /api/debate/{debate_id}/scores`
-- `WS /ws/debate/{debate_id}`
+Automated match execution and bracket advancement are planned as the next tournament upgrade.
 
-## Local Development
+## Dataset
+
+The project includes IBM Research's `argument_quality_ranking_30k` dataset under:
+
+```text
+data/ibm_argument_quality_ranking_30k/
+```
+
+Included files:
+
+- `train.csv`
+- `dev.csv`
+- `test.csv`
+- `README.md`
+- `DATASET_SOURCE.md`
+
+Source: [IBM Research argument_quality_ranking_30k on Hugging Face](https://huggingface.co/datasets/ibm-research/argument_quality_ranking_30k)
+
+The dataset contains crowd-sourced arguments for debate topics with stance and quality annotations. It is included for future calibration, evaluation, and demo analytics work.
+
+## Quick Start
+
+### Option 1: Docker
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+### Option 2: Local Development
 
 Backend:
 
@@ -167,7 +353,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
 
 Frontend:
@@ -178,28 +364,43 @@ npm install
 npm run dev
 ```
 
-Verification:
+Environment variables live in `.env`. The `.env.example` file documents all required settings. The application works without API keys through local fallback mode.
+
+## Verification
+
+Commands used for the final project check:
 
 ```bash
+python -m py_compile backend\main.py backend\api\debate.py backend\api\ws.py backend\api\tournament.py backend\agents\debater.py backend\agents\judge.py backend\agents\moderator.py backend\graph\debate_graph.py backend\scoring\engine.py backend\scoring\metrics.py backend\scoring\models.py backend\safety\toxicity.py backend\tournament\engine.py backend\tournament\models.py
 cd frontend
 npm run lint
 npm run typecheck
 npm run build
 ```
 
-Backend smoke test:
+Security and repository hygiene checks:
 
 ```bash
-cd backend
-python -c "import asyncio; from graph.debate_graph import run_terminal_demo; asyncio.run(run_terminal_demo('We should subsidize renewable energy', 1))"
+git ls-files | Select-String -Pattern '\.env$'
+git ls-files | Select-String -Pattern 'node_modules|\.next|logs|__pycache__|\.pytest_cache'
+git ls-files | ForEach-Object { Select-String -Path $_ -Pattern 'sk-[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]+|ghp_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+|AIza[0-9A-Za-z_-]{20,}|-----BEGIN (RSA |OPENSSH |EC |)PRIVATE KEY-----' -ErrorAction SilentlyContinue }
 ```
 
-## Dataset
+## Current Limitations
 
-The project includes IBM Research's `argument_quality_ranking_30k` CSV splits under `data/ibm_argument_quality_ranking_30k`. The dataset card says it contains 30,497 crowd-sourced arguments for 71 debate topics with quality and stance labels. Source: [Hugging Face](https://huggingface.co/datasets/ibm-research/argument_quality_ranking_30k).
+- Live provider calls require valid Anthropic and/or OpenAI API keys.
+- The included NLI and embedding logic has lightweight local fallbacks for demo speed and reliability.
+- Tournament mode currently creates and visualizes brackets but does not automatically run every bracket match.
+- Human vs Human is intentionally a disabled placeholder.
+- Replay reconstructs events from saved state rather than recording raw WebSocket timing.
+- Screenshots are static; the YouTube walkthrough will show the full interactive experience.
 
-## Notes
+## Future Work
 
-- Redis is the primary state store; the backend falls back to in-memory state when Redis is unavailable for quick local demos.
-- WebSocket clients replay current state on reconnect.
-- The judge retries malformed JSON responses up to three times before falling back to the local scoring engine.
+- Add automated tournament match execution and bracket advancement.
+- Add authenticated user accounts and saved debate libraries.
+- Add calibrated evaluation against the included IBM argument quality dataset.
+- Add richer streaming from provider APIs when live keys are present.
+- Add exportable debate reports for recruiters, classrooms, or coaching.
+- Add CI checks for backend imports, frontend linting, type checking, and production build.
+- Add hosted deployment with persistent Redis and environment-based provider configuration.
