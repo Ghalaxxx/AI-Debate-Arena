@@ -12,6 +12,7 @@ import { useDebateSocket } from "@/hooks/useDebateSocket";
 
 import ArgumentCard from "./ArgumentCard";
 import ArgumentTree from "./ArgumentTree";
+import DebateAnalytics from "./DebateAnalytics";
 import HumanArgumentComposer from "./HumanArgumentComposer";
 import JudgeExplainabilityPanel from "./JudgeExplainabilityPanel";
 import ScoreRadar, { emptyDimensionScores } from "./ScoreRadar";
@@ -253,6 +254,15 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           ) : null}
 
           <ArgumentTree argumentsList={argumentsList} scoresByArgument={scoresByArgument} />
+
+          {status === "DEBATE_ENDED" ? (
+            <DebateAnalytics
+              argumentsList={argumentsList}
+              scores={scores}
+              proTotal={proTotal}
+              conTotal={conTotal}
+            />
+          ) : null}
 
           {isHumanTurn ? <HumanArgumentComposer debateId={debateId} language={debate.language} /> : null}
 

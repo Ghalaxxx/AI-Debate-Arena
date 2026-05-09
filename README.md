@@ -101,6 +101,18 @@ Each scored argument exposes a judge explainability drawer from its score badge.
 - Why points were gained or lost
 - Detected flags
 
+## Debate Analytics
+
+After a debate ends, the arena shows a compact analytics dashboard with:
+
+- Score trend per round
+- PRO vs CON average score
+- Evidence quality trend
+- Originality trend
+- Best argument
+- Weakest argument
+- Most persuasive round
+
 ## API
 
 - `POST /api/debate/create`
