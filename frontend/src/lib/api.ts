@@ -8,6 +8,7 @@ import type {
   DebaterSide,
   HumanArgumentResponse,
   ScoresResponse,
+  TournamentState,
   VoteResponse
 } from "./types";
 
@@ -60,4 +61,14 @@ export function websocketUrlFor(debateId: string): string {
     return `${configured.replace(/\/$/, "")}/ws/debate/${debateId}`;
   }
   return `${API_BASE_URL.replace(/^http/, "ws").replace(/\/$/, "")}/ws/debate/${debateId}`;
+}
+
+export async function createTournament(topics: string[]): Promise<TournamentState> {
+  const response = await apiClient.post<TournamentState>("/api/tournament/create", { topics });
+  return response.data;
+}
+
+export async function getTournament(tournamentId: string): Promise<TournamentState> {
+  const response = await apiClient.get<TournamentState>(`/api/tournament/${tournamentId}`);
+  return response.data;
 }

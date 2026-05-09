@@ -135,6 +135,33 @@ export interface HumanArgumentResponse {
   message: string;
 }
 
+export type MatchStatus = "PENDING" | "READY" | "COMPLETE";
+
+export interface TournamentTopic {
+  seed: number;
+  topic: string;
+}
+
+export interface TournamentMatch {
+  match_id: string;
+  round_number: number;
+  slot_a: string;
+  slot_b: string;
+  status: MatchStatus;
+  winner_topic: string | null;
+  winner_side: DebaterSide | null;
+}
+
+export interface TournamentState {
+  tournament_id: string;
+  size: 4 | 8;
+  topics: TournamentTopic[];
+  matches: TournamentMatch[];
+  champion_topic: string | null;
+  champion_side: DebaterSide | null;
+  created_at: string;
+}
+
 export type DebateMessage =
   | { type: "ARGUMENT"; payload: ArgumentPayload }
   | {

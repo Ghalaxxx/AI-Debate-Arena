@@ -137,6 +137,18 @@ Ended debates link to `/replay/{debate_id}`. Replay mode reconstructs the debate
 
 Speed controls support `1x`, `1.5x`, and `2x`.
 
+## Tournament Brackets
+
+Tournament mode is available at `/tournament`. The first version includes:
+
+- 4-topic or 8-topic bracket creation
+- Typed backend tournament models
+- `POST /api/tournament/create`
+- `GET /api/tournament/{tournament_id}`
+- Clean bracket visualization with pending semifinal/final slots
+
+Automated match execution and winner advancement are intentionally left as the next bracket upgrade.
+
 ## API
 
 - `POST /api/debate/create`

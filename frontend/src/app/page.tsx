@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, History, Loader2, Radio, Swords } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -171,6 +172,12 @@ export default function HomePage() {
               fallback ready
             </span>
           </div>
+          <Link
+            href="/tournament"
+            className="mb-5 inline-flex rounded-md border border-arena-purple/40 bg-arena-purple/12 px-3 py-2 font-mono text-xs text-arena-purple transition hover:border-arena-purple"
+          >
+            Open tournament mode
+          </Link>
 
           <label htmlFor="topic" className="mb-3 block text-sm font-semibold text-arena-text">
             Debate topic

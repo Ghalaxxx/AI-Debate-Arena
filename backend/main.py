@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.debate import router as debate_router
+from api.tournament import router as tournament_router
 from api.ws import router as websocket_router
 from config import SETTINGS
 
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(debate_router, prefix="/api/debate", tags=["debate"])
+app.include_router(tournament_router, prefix="/api/tournament", tags=["tournament"])
 app.include_router(websocket_router, tags=["websocket"])
 
 
