@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Bot, Loader2, Trophy } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getDebateState, startDebate } from "@/lib/api";
@@ -210,9 +211,17 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
                 </p>
               </div>
               {debate.winner ? (
-                <div className="inline-flex items-center gap-2 rounded-md border border-arena-teal/40 bg-arena-teal/14 px-3 py-2 font-mono text-xs text-arena-teal">
-                  <Trophy className="h-4 w-4" />
-                  {debate.winner}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-md border border-arena-teal/40 bg-arena-teal/14 px-3 py-2 font-mono text-xs text-arena-teal">
+                    <Trophy className="h-4 w-4" />
+                    {debate.winner}
+                  </div>
+                  <Link
+                    href={`/replay/${debate.debate_id}`}
+                    className="rounded-md border border-arena-purple/40 bg-arena-purple/14 px-3 py-2 font-mono text-xs text-arena-purple transition hover:border-arena-purple"
+                  >
+                    Replay
+                  </Link>
                 </div>
               ) : null}
             </div>

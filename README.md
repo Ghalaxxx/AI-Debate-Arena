@@ -125,6 +125,18 @@ The scoring engine includes conservative safety checks that flag, but do not blo
 
 Flags are stored on `ArgumentScore` and displayed as warning badges on argument cards and in the judge explainability drawer.
 
+## Debate Replay
+
+Ended debates link to `/replay/{debate_id}`. Replay mode reconstructs the debate from saved state and plays events step by step:
+
+- Turn state
+- Argument reveal
+- Judging state
+- Score reveal
+- End result
+
+Speed controls support `1x`, `1.5x`, and `2x`.
+
 ## API
 
 - `POST /api/debate/create`
