@@ -41,6 +41,11 @@ ALSO CHECK FOR FLAGS:
 - "straw_man": misrepresents opponent's position
 - "false_dichotomy": presents only two options when more exist
 - "off_topic": argument is not about the debate topic
+- "insult": uses direct insults
+- "hate_speech": attacks a protected group
+- "personal_attack": attacks a person instead of the argument
+- "aggressive_language": uses clearly hostile or violent rhetoric
+- "off_topic_attack": attacks identity or personal traits unrelated to the debate
 
 Return ONLY valid JSON, no other text:
 {{

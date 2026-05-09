@@ -12,6 +12,7 @@ from scoring.metrics import (
     calculate_relevance,
 )
 from scoring.models import Argument, ArgumentScore, DebaterSide, DebateState, clamp_score
+from safety.toxicity import detect_toxicity_flags
 
 WEIGHTS: dict[str, float] = {
     "logical_coherence": 0.25,
@@ -38,7 +39,12 @@ class DebateScoringEngine:
             same_side_history=[item.text for item in same_side_history],
         )
         dimensions = {name: result.score for name, result in metric_results.items()}
-        flags = sorted({flag for result in metric_results.values() for flag in result.flags} | set(argument.flags))
+        toxicity_flags = detect_toxicity_flags(argument.text)
+        flags = sorted(
+            {flag for result in metric_results.values() for flag in result.flags}
+            | set(argument.flags)
+            | set(toxicity_flags)
+        )
         final_score = clamp_score(sum(dimensions[name] * WEIGHTS[name] for name in WEIGHTS))
         reasoning = self._compose_reasoning(metric_results)
         strongest_point, weakest_point, score_explanation = self._explain_score(dimensions)

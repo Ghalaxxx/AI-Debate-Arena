@@ -113,6 +113,18 @@ After a debate ends, the arena shows a compact analytics dashboard with:
 - Weakest argument
 - Most persuasive round
 
+## Toxicity Detection
+
+The scoring engine includes conservative safety checks that flag, but do not block, clearly unsafe rhetoric:
+
+- Insults
+- Hate speech
+- Personal attacks
+- Aggressive language
+- Off-topic identity attacks
+
+Flags are stored on `ArgumentScore` and displayed as warning badges on argument cards and in the judge explainability drawer.
+
 ## API
 
 - `POST /api/debate/create`

@@ -83,6 +83,16 @@ export default function ArgumentCard({ argument, score, isLatest, language = "en
         {visibleText}
       </p>
 
+      {isFlagged ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[...argument.flags, ...(score?.flags ?? [])].slice(0, 4).map((flag) => (
+            <span key={flag} className="rounded-md border border-arena-red/40 bg-arena-red/12 px-2 py-1 font-mono text-[11px] text-arena-red">
+              {flag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <div className="mt-4 flex items-center justify-between gap-3">
         <span className="font-mono text-[11px] text-arena-muted">
           {new Date(argument.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
