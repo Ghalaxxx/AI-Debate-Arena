@@ -6,6 +6,7 @@ import type {
   DebateStartResponse,
   DebateState,
   DebaterSide,
+  HumanArgumentResponse,
   ScoresResponse,
   VoteResponse
 } from "./types";
@@ -40,6 +41,11 @@ export async function vote(debateId: string, voteFor: DebaterSide, argumentId?: 
     vote: voteFor,
     argument_id: argumentId ?? null
   });
+  return response.data;
+}
+
+export async function submitHumanArgument(debateId: string, text: string): Promise<HumanArgumentResponse> {
+  const response = await apiClient.post<HumanArgumentResponse>(`/api/debate/${debateId}/argument`, { text });
   return response.data;
 }
 

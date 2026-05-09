@@ -12,6 +12,7 @@ import { useDebateSocket } from "@/hooks/useDebateSocket";
 
 import ArgumentCard from "./ArgumentCard";
 import ArgumentTree from "./ArgumentTree";
+import HumanArgumentComposer from "./HumanArgumentComposer";
 import ScoreRadar, { emptyDimensionScores } from "./ScoreRadar";
 import StatusBar from "./StatusBar";
 import VotePanel from "./VotePanel";
@@ -151,6 +152,12 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
   const conArguments = argumentsList.filter((argument) => argument.debater === "CON");
   const votes = currentVotes(debate);
   const isJudging = status === "JUDGING";
+  const isHumanTurn =
+    debate !== null &&
+    debate.mode === "HUMAN_VS_AI" &&
+    debate.human_side === debate.turn &&
+    status === (debate.turn === "PRO" ? "PRO_TURN" : "CON_TURN") &&
+    debate.status !== "DEBATE_ENDED";
 
   if (!debate) {
     return (
@@ -229,6 +236,8 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           ) : null}
 
           <ArgumentTree argumentsList={argumentsList} scoresByArgument={scoresByArgument} />
+
+          {isHumanTurn ? <HumanArgumentComposer debateId={debateId} /> : null}
 
           {error ? (
             <div className="flex items-center gap-2 rounded-lg border border-arena-red/40 bg-arena-red/12 p-3 text-sm text-arena-red">

@@ -107,7 +107,12 @@ export const useDebateStore = create<DebateStoreState>((set) => ({
         return {
           status: message.payload.new_state,
           debate: state.debate
-            ? { ...state.debate, status: message.payload.new_state, current_round: message.payload.round }
+            ? {
+                ...state.debate,
+                status: message.payload.new_state,
+                current_round: message.payload.round,
+                turn: message.payload.turn ?? state.debate.turn
+              }
             : state.debate
         };
       }

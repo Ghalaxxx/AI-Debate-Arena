@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 DebaterSide = Literal["PRO", "CON"]
 WinnerSide = Literal["PRO", "CON", "TIE"]
+DebateMode = Literal["AI_VS_AI", "HUMAN_VS_AI", "HUMAN_VS_HUMAN"]
 DebateStatus = Literal[
     "WAITING",
     "PRO_TURN",
@@ -103,11 +104,21 @@ class DebateConfig(BaseModel):
     pro_model: str = "claude-sonnet-4-20250514"
     con_model: str = "claude-sonnet-4-20250514"
     judge_model: str = "claude-sonnet-4-20250514"
+    mode: DebateMode = "AI_VS_AI"
+    human_side: DebaterSide | None = None
 
     @field_validator("topic")
     @classmethod
     def normalize_topic(cls, value: str) -> str:
         return " ".join(value.strip().split())
+
+    @model_validator(mode="after")
+    def normalize_mode(self) -> "DebateConfig":
+        if self.mode == "HUMAN_VS_AI" and self.human_side is None:
+            self.human_side = "PRO"
+        if self.mode == "AI_VS_AI":
+            self.human_side = None
+        return self
 
 
 class DebateState(BaseModel):
@@ -122,6 +133,8 @@ class DebateState(BaseModel):
     pro_model: str = "claude-sonnet-4-20250514"
     con_model: str = "claude-sonnet-4-20250514"
     judge_model: str = "claude-sonnet-4-20250514"
+    mode: DebateMode = "AI_VS_AI"
+    human_side: DebaterSide | None = None
     turn: DebaterSide = "PRO"
     arguments: list[Argument] = Field(default_factory=list)
     scores: list[ArgumentScore] = Field(default_factory=list)
@@ -139,6 +152,10 @@ class DebateState(BaseModel):
             "PRO": int(self.audience_votes.get("PRO", 0)),
             "CON": int(self.audience_votes.get("CON", 0)),
         }
+        if self.mode == "HUMAN_VS_AI" and self.human_side is None:
+            self.human_side = "PRO"
+        if self.mode == "AI_VS_AI":
+            self.human_side = None
         return self
 
     def recompute_totals(self) -> None:
@@ -187,6 +204,28 @@ class VoteRequest(BaseModel):
 
     vote: DebaterSide
     argument_id: str | None = None
+
+
+class HumanArgumentRequest(BaseModel):
+    """Manual human argument submitted during Human vs AI debates."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=10, max_length=4_000)
+
+    @field_validator("text")
+    @classmethod
+    def normalize_text(cls, value: str) -> str:
+        return " ".join(value.strip().split())
+
+
+class HumanArgumentResponse(BaseModel):
+    """Acknowledgement after a human argument is queued for judging."""
+
+    debate_id: str
+    argument_id: str
+    status: DebateStatus
+    message: str
 
 
 class ScoresResponse(BaseModel):

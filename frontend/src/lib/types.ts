@@ -2,6 +2,8 @@ export type DebaterSide = "PRO" | "CON";
 
 export type WinnerSide = DebaterSide | "TIE";
 
+export type DebateMode = "AI_VS_AI" | "HUMAN_VS_AI" | "HUMAN_VS_HUMAN";
+
 export type DebateStatus =
   | "WAITING"
   | "PRO_TURN"
@@ -37,6 +39,8 @@ export interface DebateConfig {
   pro_model?: string;
   con_model?: string;
   judge_model?: string;
+  mode?: DebateMode;
+  human_side?: DebaterSide | null;
 }
 
 export interface DebateCreateResponse {
@@ -89,6 +93,8 @@ export interface DebateState {
   pro_model: string;
   con_model: string;
   judge_model: string;
+  mode: DebateMode;
+  human_side: DebaterSide | null;
   turn: DebaterSide;
   arguments: Argument[];
   scores: ArgumentScore[];
@@ -115,6 +121,13 @@ export interface VoteResponse {
   audience_votes: AudienceVotes;
 }
 
+export interface HumanArgumentResponse {
+  debate_id: string;
+  argument_id: string;
+  status: DebateStatus;
+  message: string;
+}
+
 export type DebateMessage =
   | { type: "ARGUMENT"; payload: ArgumentPayload }
   | {
@@ -126,7 +139,7 @@ export type DebateMessage =
         con_total: number;
       };
     }
-  | { type: "STATE_CHANGE"; payload: { new_state: DebateStatus; round: number } }
+  | { type: "STATE_CHANGE"; payload: { new_state: DebateStatus; round: number; turn?: DebaterSide } }
   | {
       type: "DEBATE_ENDED";
       payload: {

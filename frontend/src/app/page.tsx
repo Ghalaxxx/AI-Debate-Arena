@@ -4,8 +4,10 @@ import { ArrowRight, History, Loader2, Radio, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import ModeSelector from "@/components/ModeSelector";
 import ModelSelector from "@/components/ModelSelector";
 import { createDebate } from "@/lib/api";
+import type { DebateMode } from "@/lib/types";
 import { MODEL_OPTIONS } from "@/lib/types";
 
 interface RecentDebate {
@@ -57,6 +59,7 @@ export default function HomePage() {
   const [proModel, setProModel] = useState(MODEL_OPTIONS[0].id);
   const [conModel, setConModel] = useState(MODEL_OPTIONS[1].id);
   const [judgeModel, setJudgeModel] = useState(MODEL_OPTIONS[0].id);
+  const [mode, setMode] = useState<DebateMode>("AI_VS_AI");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const remaining = 200 - topic.length;
@@ -78,7 +81,9 @@ export default function HomePage() {
         max_rounds: 5,
         pro_model: proModel,
         con_model: conModel,
-        judge_model: judgeModel
+        judge_model: judgeModel,
+        mode,
+        human_side: mode === "HUMAN_VS_AI" ? "PRO" : null
       });
       const nextRecent = storeRecentDebate({
         debateId: created.debate_id,
@@ -154,7 +159,9 @@ export default function HomePage() {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-arena-text">Debate Control Room</h2>
-              <p className="mt-2 text-sm text-arena-muted">Phase 1 supports independent PRO, CON, and Judge models.</p>
+              <p className="mt-2 text-sm text-arena-muted">
+                Choose models, mode, and topic before the debate enters the arena.
+              </p>
             </div>
             <span className="inline-flex items-center gap-2 rounded-md border border-arena-teal/40 bg-arena-teal/12 px-3 py-2 font-mono text-xs text-arena-teal">
               <Radio className="h-4 w-4" />
@@ -175,6 +182,9 @@ export default function HomePage() {
           />
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <ModeSelector value={mode} onChange={setMode} />
+            </div>
             <ModelSelector id="pro-model" label="PRO model" value={proModel} onChange={setProModel} />
             <ModelSelector id="con-model" label="CON model" value={conModel} onChange={setConModel} />
             <div className="md:col-span-2">

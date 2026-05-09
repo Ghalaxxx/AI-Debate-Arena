@@ -145,7 +145,7 @@ class DebateGraphRunner:
 
     async def _run_turn(self, side: DebaterSide) -> bool:
         self.state.turn = side
-        await self._emit_state("PRO_TURN" if side == "PRO" else "CON_TURN")
+        await self._emit_state(self._status_for_side(side))
 
         argument_text = await asyncio.wait_for(
             self._debater_for_side(side).generate_argument(
@@ -163,6 +163,38 @@ class DebateGraphRunner:
             text=argument_text,
             round_number=self.state.current_round,
         )
+        return await self._accept_argument(argument)
+
+    async def submit_human_turn(self, side: DebaterSide, text: str) -> DebateState:
+        """Accept a human turn, judge it, then generate the AI response."""
+
+        self.state.is_active = True
+        self.state.turn = side
+        await self._emit_state(self._status_for_side(side))
+        human_argument = Argument(
+            debate_id=self.state.debate_id,
+            debater=side,
+            text=text,
+            round_number=self.state.current_round,
+        )
+        should_continue = await self._accept_argument(human_argument)
+        if not should_continue:
+            await self._end_debate()
+            return self.state
+
+        ai_side = self._opposite_side(side)
+        should_continue = await self._run_turn(ai_side)
+        await self._emit_state("ROUND_COMPLETE")
+        if not should_continue or self.state.current_round >= self.state.max_rounds:
+            await self._end_debate()
+            return self.state
+
+        self.state.current_round += 1
+        self.state.turn = side
+        await self._emit_state(self._status_for_side(side))
+        return self.state
+
+    async def _accept_argument(self, argument: Argument) -> bool:
         self.state.arguments.append(argument)
         await self.on_event({"type": "ARGUMENT", "payload": self._argument_payload(argument)}, self.state)
 
@@ -204,7 +236,7 @@ class DebateGraphRunner:
         await self.on_event(
             {
                 "type": "STATE_CHANGE",
-                "payload": {"new_state": status, "round": self.state.current_round},
+                "payload": {"new_state": status, "round": self.state.current_round, "turn": self.state.turn},
             },
             self.state,
         )
@@ -235,6 +267,12 @@ class DebateGraphRunner:
 
     def _debater_for_side(self, side: DebaterSide) -> ProDebater | ConDebater:
         return self.pro_debater if side == "PRO" else self.con_debater
+
+    def _status_for_side(self, side: DebaterSide) -> DebateStatus:
+        return "PRO_TURN" if side == "PRO" else "CON_TURN"
+
+    def _opposite_side(self, side: DebaterSide) -> DebaterSide:
+        return "CON" if side == "PRO" else "PRO"
 
     def _latest_opponent_argument(self, side: DebaterSide) -> Argument | None:
         opponent: DebaterSide = "CON" if side == "PRO" else "PRO"

@@ -47,7 +47,7 @@ class DebateRuntimeManager:
 
     def __init__(self, connections: ConnectionManager) -> None:
         self.connections = connections
-        self._tasks: dict[str, asyncio.Task[None]] = {}
+        self._tasks: dict[str, asyncio.Task[Any]] = {}
 
     async def start_debate(self, debate_id: str) -> None:
         task = self._tasks.get(debate_id)
@@ -56,7 +56,35 @@ class DebateRuntimeManager:
         state = await debate_store.get(debate_id)
         if state is None or state.status == "DEBATE_ENDED":
             return
+        if state.mode == "HUMAN_VS_AI" and state.human_side == state.turn:
+            return
         self._tasks[debate_id] = asyncio.create_task(self._run(debate_id, state))
+
+    async def submit_human_argument(self, debate_id: str, text: str) -> str:
+        task = self._tasks.get(debate_id)
+        if task is not None and not task.done():
+            raise RuntimeError("Debate turn is already running.")
+        state = await debate_store.get(debate_id)
+        if state is None:
+            raise RuntimeError("Debate not found.")
+        if state.human_side is None:
+            raise RuntimeError("Human side is not configured.")
+
+        async def emit(event: DebateEvent, updated_state: DebateState) -> None:
+            await debate_store.save(updated_state)
+            await self.connections.broadcast(updated_state.debate_id, event)
+
+        existing_count = len(state.arguments)
+        runner = DebateGraphRunner(state=state, on_event=emit)
+        self._tasks[debate_id] = asyncio.create_task(runner.submit_human_turn(state.human_side, text))
+        try:
+            final_state = await self._tasks[debate_id]
+            await debate_store.save(final_state)
+        finally:
+            self._tasks.pop(debate_id, None)
+        if len(final_state.arguments) <= existing_count:
+            raise RuntimeError("Human argument was not accepted.")
+        return final_state.arguments[existing_count].argument_id
 
     async def _run(self, debate_id: str, state: DebateState) -> None:
         async def emit(event: DebateEvent, updated_state: DebateState) -> None:
@@ -104,7 +132,7 @@ async def debate_websocket(websocket: WebSocket, debate_id: str) -> None:
 
 async def _replay_state(websocket: WebSocket, state: DebateState) -> None:
     await websocket.send_json(
-        {"type": "STATE_CHANGE", "payload": {"new_state": state.status, "round": state.current_round}}
+        {"type": "STATE_CHANGE", "payload": {"new_state": state.status, "round": state.current_round, "turn": state.turn}}
     )
     for argument in state.arguments:
         await websocket.send_json(

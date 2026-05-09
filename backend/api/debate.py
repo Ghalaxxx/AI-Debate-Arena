@@ -14,6 +14,8 @@ from scoring.models import (
     DebateCreateResponse,
     DebateStartResponse,
     DebateState,
+    HumanArgumentRequest,
+    HumanArgumentResponse,
     ScoresResponse,
     VoteRequest,
     new_uuid,
@@ -99,6 +101,8 @@ async def create_debate(payload: DebateCreateRequest, request: Request) -> Debat
         pro_model=payload.pro_model,
         con_model=payload.con_model,
         judge_model=payload.judge_model,
+        mode=payload.mode,
+        human_side=payload.human_side,
         status="WAITING",
     )
     await debate_store.save(state)
@@ -124,10 +128,46 @@ async def start_debate(debate_id: str) -> DebateStartResponse:
     state.turn = "PRO"
     await debate_store.save(state)
 
+    from api.ws import connection_manager, runtime_manager
+
+    await connection_manager.broadcast(
+        debate_id,
+        {
+            "type": "STATE_CHANGE",
+            "payload": {"new_state": state.status, "round": state.current_round, "turn": state.turn},
+        },
+    )
+    if state.mode == "AI_VS_AI" or state.human_side != state.turn:
+        await runtime_manager.start_debate(debate_id)
+    return DebateStartResponse(debate_id=debate_id, status=state.status, message="Debate started")
+
+
+@router.post("/{debate_id}/argument", response_model=HumanArgumentResponse, status_code=status.HTTP_202_ACCEPTED)
+async def submit_human_argument(debate_id: str, payload: HumanArgumentRequest) -> HumanArgumentResponse:
+    """Submit a manual human argument during Human vs AI mode."""
+
+    state = await debate_store.get(debate_id)
+    if state is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Debate not found.")
+    if state.mode != "HUMAN_VS_AI":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Debate is not in Human vs AI mode.")
+    if state.status == "DEBATE_ENDED":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Debate already ended.")
+    if not state.is_active:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Debate has not started.")
+    if state.human_side != state.turn:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="It is not the human debater's turn.")
+
     from api.ws import runtime_manager
 
-    await runtime_manager.start_debate(debate_id)
-    return DebateStartResponse(debate_id=debate_id, status=state.status, message="Debate started")
+    argument_id = await runtime_manager.submit_human_argument(debate_id, payload.text)
+    updated_state = await debate_store.get(debate_id)
+    return HumanArgumentResponse(
+        debate_id=debate_id,
+        argument_id=argument_id,
+        status=updated_state.status if updated_state else state.status,
+        message="Human argument accepted for judging.",
+    )
 
 
 @router.get("/{debate_id}/state", response_model=DebateState)
@@ -156,7 +196,7 @@ async def vote(debate_id: str, payload: VoteRequest) -> dict[str, Any]:
         debate_id,
         {
             "type": "STATE_CHANGE",
-            "payload": {"new_state": state.status, "round": state.current_round},
+            "payload": {"new_state": state.status, "round": state.current_round, "turn": state.turn},
         },
     )
     return {

@@ -70,6 +70,16 @@ The home setup screen lets users choose independent models for:
 
 Supported UI choices currently include Claude Sonnet 4, GPT-4o, GPT-4o Mini, and Local Fallback. Model IDs are persisted in `DebateState` and shown in the live arena. If API keys are missing, the backend keeps the demo running through deterministic local fallback agents and scoring.
 
+## Debate Modes
+
+The setup screen now supports:
+
+- `AI_VS_AI`: both sides are generated automatically.
+- `HUMAN_VS_AI`: the human argues PRO, submits manual arguments in the arena, and the AI responds as CON.
+- `HUMAN_VS_HUMAN`: visible as a disabled placeholder for a later multiplayer phase.
+
+Human arguments are submitted through `POST /api/debate/{debate_id}/argument`, judged with the same scoring engine, and streamed to connected WebSocket clients before the AI response is generated.
+
 ## API
 
 - `POST /api/debate/create`
