@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Bot, Loader2, Trophy } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getDebateState, startDebate } from "@/lib/api";
 import type { Argument, ArgumentScore, DebateLanguage, DebaterSide, DimensionScores } from "@/lib/types";
@@ -13,6 +13,7 @@ import { useDebateSocket } from "@/hooks/useDebateSocket";
 import ArgumentCard from "./ArgumentCard";
 import ArgumentTree from "./ArgumentTree";
 import HumanArgumentComposer from "./HumanArgumentComposer";
+import JudgeExplainabilityPanel from "./JudgeExplainabilityPanel";
 import ScoreRadar, { emptyDimensionScores } from "./ScoreRadar";
 import StatusBar from "./StatusBar";
 import VotePanel from "./VotePanel";
@@ -106,6 +107,7 @@ function SidePanel({
 
 export default function DebateArena({ debateId }: DebateArenaProps) {
   const startedRef = useRef(false);
+  const [selectedScoreId, setSelectedScoreId] = useState<string | null>(null);
   const debate = useDebateStore((state) => state.debate);
   const argumentsList = useDebateStore((state) => state.arguments);
   const scoresByArgument = useDebateStore((state) => state.scoresByArgument);
@@ -163,6 +165,10 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
     debate.human_side === debate.turn &&
     status === (debate.turn === "PRO" ? "PRO_TURN" : "CON_TURN") &&
     debate.status !== "DEBATE_ENDED";
+  const selectedArgument = selectedScoreId
+    ? argumentsList.find((argument) => argument.argument_id === selectedScoreId) ?? null
+    : null;
+  const selectedScore = selectedScoreId ? scoresByArgument[selectedScoreId] ?? null : null;
 
   if (!debate) {
     return (
@@ -224,6 +230,7 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
                       score={scoresByArgument[argument.argument_id] ?? null}
                       isLatest={argument.argument_id === latestArgumentId}
                       language={debate.language}
+                      onInspect={() => setSelectedScoreId(argument.argument_id)}
                     />
                   </div>
                 </div>
@@ -268,6 +275,14 @@ export default function DebateArena({ debateId }: DebateArenaProps) {
           language={debate.language}
         />
       </div>
+
+      {selectedArgument && selectedScore ? (
+        <JudgeExplainabilityPanel
+          argument={selectedArgument}
+          score={selectedScore}
+          onClose={() => setSelectedScoreId(null)}
+        />
+      ) : null}
 
       <div className="border-t border-arena-line bg-arena-black/94">
         <div className="grid gap-3 px-4 py-3 lg:grid-cols-[1fr_auto_1fr] lg:items-center">

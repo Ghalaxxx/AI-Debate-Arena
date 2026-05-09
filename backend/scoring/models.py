@@ -81,6 +81,9 @@ class ArgumentScore(BaseModel):
     dimensions: dict[str, float]
     final_score: float
     judge_reasoning: str
+    strongest_point: str = "Not available."
+    weakest_point: str = "Not available."
+    score_explanation: str = "No detailed score explanation was provided."
     timestamp: datetime = Field(default_factory=utc_now)
     flags: list[str] = Field(default_factory=list)
 

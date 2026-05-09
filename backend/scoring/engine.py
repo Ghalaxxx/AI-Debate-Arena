@@ -41,6 +41,7 @@ class DebateScoringEngine:
         flags = sorted({flag for result in metric_results.values() for flag in result.flags} | set(argument.flags))
         final_score = clamp_score(sum(dimensions[name] * WEIGHTS[name] for name in WEIGHTS))
         reasoning = self._compose_reasoning(metric_results)
+        strongest_point, weakest_point, score_explanation = self._explain_score(dimensions)
         return ArgumentScore(
             argument_id=argument.argument_id,
             debater=argument.debater,
@@ -48,6 +49,9 @@ class DebateScoringEngine:
             dimensions=dimensions,
             final_score=final_score,
             judge_reasoning=reasoning,
+            strongest_point=strongest_point,
+            weakest_point=weakest_point,
+            score_explanation=score_explanation,
             flags=flags,
         )
 
@@ -113,6 +117,25 @@ class DebateScoringEngine:
             f"Coherence: {coherence.reason} Evidence: {evidence.reason} "
             f"Relevance: {relevance.reason}"
         )
+
+    def _explain_score(self, dimensions: dict[str, float]) -> tuple[str, str, str]:
+        labels = {
+            "logical_coherence": "logical coherence",
+            "evidence_quality": "evidence quality",
+            "persuasiveness": "persuasiveness",
+            "relevance": "topic relevance",
+            "counterargument": "counterargument strength",
+            "originality": "originality",
+        }
+        strongest_key = max(dimensions, key=dimensions.get)
+        weakest_key = min(dimensions, key=dimensions.get)
+        strongest = f"Strongest dimension was {labels[strongest_key]} at {dimensions[strongest_key]:.2f}."
+        weakest = f"Weakest dimension was {labels[weakest_key]} at {dimensions[weakest_key]:.2f}."
+        explanation = (
+            f"The argument gained points from {labels[strongest_key]} and lost the most ground on "
+            f"{labels[weakest_key]}. The final weighted score reflects the configured rubric weights."
+        )
+        return strongest, weakest, explanation
 
 
 def build_dimension_breakdown(scores: list[ArgumentScore]) -> dict[DebaterSide, dict[str, float]]:

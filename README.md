@@ -89,6 +89,18 @@ The setup screen supports English and Arabic. When Arabic is selected:
 - Local fallback debaters produce Arabic arguments without API keys.
 - The debate arena switches to RTL layout and Arabic argument cards use right-aligned, readable text.
 
+## Judge Explainability
+
+Each scored argument exposes a judge explainability drawer from its score badge. The drawer shows:
+
+- Final weighted score
+- Six dimension scores
+- Judge reasoning
+- Strongest point
+- Weakest point
+- Why points were gained or lost
+- Detected flags
+
 ## API
 
 - `POST /api/debate/create`

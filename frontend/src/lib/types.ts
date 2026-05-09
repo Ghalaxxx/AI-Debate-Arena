@@ -84,6 +84,9 @@ export interface ArgumentScore {
   dimensions: DimensionScores;
   final_score: number;
   judge_reasoning: string;
+  strongest_point: string;
+  weakest_point: string;
+  score_explanation: string;
   timestamp: string;
   flags: string[];
 }

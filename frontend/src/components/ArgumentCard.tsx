@@ -10,6 +10,7 @@ interface ArgumentCardProps {
   score: ArgumentScore | null;
   isLatest: boolean;
   language?: DebateLanguage;
+  onInspect?: () => void;
 }
 
 function scoreTone(score: number): string {
@@ -22,7 +23,7 @@ function scoreTone(score: number): string {
   return "bg-arena-teal/18 text-arena-teal border-arena-teal/40";
 }
 
-export default function ArgumentCard({ argument, score, isLatest, language = "en" }: ArgumentCardProps) {
+export default function ArgumentCard({ argument, score, isLatest, language = "en", onInspect }: ArgumentCardProps) {
   const [visibleText, setVisibleText] = useState(argument.text);
   const isFlagged = argument.flags.length > 0 || (score?.flags.length ?? 0) > 0;
   const sideAccent = argument.debater === "PRO" ? "border-l-arena-purple" : "border-l-arena-coral";
@@ -87,14 +88,16 @@ export default function ArgumentCard({ argument, score, isLatest, language = "en
           {new Date(argument.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
         {score ? (
-          <span
-            className={`animate-scoreIn inline-flex items-center gap-1 rounded-md border px-2 py-1 font-mono text-xs ${scoreTone(
+          <button
+            type="button"
+            onClick={onInspect}
+            className={`animate-scoreIn inline-flex items-center gap-1 rounded-md border px-2 py-1 font-mono text-xs transition hover:brightness-125 ${scoreTone(
               score.final_score
             )}`}
           >
             <Gauge className="h-3.5 w-3.5" />
             {(score.final_score * 100).toFixed(0)}
-          </span>
+          </button>
         ) : (
           <span className="rounded-md border border-arena-line px-2 py-1 font-mono text-xs text-arena-muted">
             JUDGING

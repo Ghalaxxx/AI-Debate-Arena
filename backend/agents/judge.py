@@ -53,6 +53,9 @@ Return ONLY valid JSON, no other text:
     "originality": 0.0
   }},
   "reasoning": "2-3 sentences explaining the scores",
+  "strongest_point": "Specific strongest point in the argument",
+  "weakest_point": "Specific weakest point in the argument",
+  "score_explanation": "Why this argument gained and lost points",
   "flags": []
 }}"""
 
@@ -189,5 +192,8 @@ class JudgeAgent:
             dimensions=dimensions,
             final_score=final_score,
             judge_reasoning=str(payload.get("reasoning", "Judge returned structured scores.")),
+            strongest_point=str(payload.get("strongest_point", "Judge did not provide a strongest point.")),
+            weakest_point=str(payload.get("weakest_point", "Judge did not provide a weakest point.")),
+            score_explanation=str(payload.get("score_explanation", "Judge did not explain point gains and losses.")),
             flags=flags,
         )
